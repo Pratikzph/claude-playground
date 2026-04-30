@@ -5,11 +5,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let todos = JSON.parse(localStorage.getItem('todos')) || [];
 
-    function saveTodos() {
+    function save_todos() {
         localStorage.setItem('todos', JSON.stringify(todos));
     }
 
-    function renderTodos() {
+    function render_todos() {
         todoList.innerHTML = '';
         todos.forEach((todo, index) => {
             const li = document.createElement('li');
@@ -20,12 +20,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (todo.completed) {
                 span.classList.add('completed');
             }
-            span.addEventListener('click', () => toggleTodo(index));
+            span.addEventListener('click', () => toggle_todo(index));
 
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = 'Delete';
             deleteBtn.classList.add('delete-btn');
-            deleteBtn.addEventListener('click', () => deleteTodo(index));
+            deleteBtn.addEventListener('click', () => delete_todo(index));
 
             li.appendChild(span);
             li.appendChild(deleteBtn);
@@ -33,34 +33,34 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function addTodo() {
+    function add_todo() {
         const text = todoInput.value.trim();
         if (text !== '') {
             todos.push({ text, completed: false });
             todoInput.value = '';
-            saveTodos();
-            renderTodos();
+            save_todos();
+            render_todos();
         }
     }
 
-    function toggleTodo(index) {
+    function toggle_todo(index) {
         todos[index].completed = !todos[index].completed;
-        saveTodos();
-        renderTodos();
+        save_todos();
+        render_todos();
     }
 
-    function deleteTodo(index) {
+    function delete_todo(index) {
         todos.splice(index, 1);
-        saveTodos();
-        renderTodos();
+        save_todos();
+        render_todos();
     }
 
-    addBtn.addEventListener('click', addTodo);
+    addBtn.addEventListener('click', add_todo);
     todoInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-            addTodo();
+            add_todo();
         }
     });
 
-    renderTodos();
+    render_todos();
 });
