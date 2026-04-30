@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## About
+
+This repository is a sandbox for testing Google Jules (Google's AI coding agent). It currently contains no source code — add language-specific build, lint, and test commands here as the project grows.
+
 ## Running the App
 
 This is a static site with no build step or package manager. Open `index.html` directly in a browser:
