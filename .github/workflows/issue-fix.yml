@@ -1,8 +1,8 @@
 name: Claude Code Issue Fixer
 
 on:
-  issue_comment:
-    types: [created]
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
@@ -11,10 +11,6 @@ permissions:
 
 jobs:
   claude-fix:
-    # Only run on issue comments (not PR comments), and only when @claude is mentioned
-    if: |
-      github.event.issue.pull_request == null &&
-      contains(github.event.comment.body, '@claude')
     runs-on: ubuntu-latest
 
     steps:
@@ -26,17 +22,19 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          trigger_phrase: ""
           base_branch: dev
           branch_prefix: "fix/"
           prompt: |
+            Read the issue title and description carefully, then implement the necessary code changes to resolve it.
             After implementing the fix, create a pull request with:
-            - Title: a concise "fix: <what was resolved>" title derived from the actual changes made
-            - Description structured as:
+            - Title: a concise "fix: <what was resolved>" derived from the actual changes made
+            - Description with these sections:
               ## Summary
-              One paragraph explaining what the issue was and how it was fixed.
+              What the issue was and how it was fixed.
               ## Changes
               Bullet list of files/functions modified and why.
               ## How to verify
-              Step-by-step instructions to confirm the fix works.
+              Steps to confirm the fix works.
               ---
               Closes #${{ github.event.issue.number }}
