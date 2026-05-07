@@ -48,38 +48,25 @@ jobs:
             exit 0
           fi
 
-          # Commits on this branch not in base
           zph_commits=$(git log origin/$zph_base..HEAD --oneline)
           zph_commit_count=$(echo "$zph_commits" | grep -c .)
-
-          # Diff stat summary (files changed, insertions, deletions)
           zph_stat_summary=$(git diff --shortstat origin/$zph_base...HEAD)
-
-          # Per-file breakdown
           zph_file_stats=$(git diff --stat origin/$zph_base...HEAD | head -n -1 | awk '{
             for (i=1; i<=NF; i++) if ($i == "|") { print "- `" $1 "` — " $(i+1) " changes"; break }
           }')
 
-          # Build PR body
-          zph_body="## Changes
-
-$zph_stat_summary
-
-## Commits ($zph_commit_count)
-
-$(echo "$zph_commits" | sed 's/^/- /')
-
-## Files Changed
-
-$zph_file_stats
-
----
-<sub>PR created automatically on push to \`$zph_branch\`.</sub>"
+          # Write body to file to avoid YAML indentation issues with multiline strings
+          printf '## Changes\n\n%s\n\n## Commits (%s)\n\n%s\n\n## Files Changed\n\n%s\n\n---\n<sub>PR created automatically on push to `%s`.</sub>\n' \
+            "$zph_stat_summary" \
+            "$zph_commit_count" \
+            "$(echo "$zph_commits" | sed 's/^/- /')" \
+            "$zph_file_stats" \
+            "$zph_branch" > "$RUNNER_TEMP/zph_pr_body.md"
 
           gh pr create \
             --title "$zph_branch" \
             --base "$zph_base" \
             --head "$zph_branch" \
-            --body "$zph_body"
+            --body-file "$RUNNER_TEMP/zph_pr_body.md"
 
           echo "PR created: '$zph_branch' → '$zph_base'"

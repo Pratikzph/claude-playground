@@ -129,7 +129,7 @@ jobs:
 
           zph_client = anthropic.Anthropic(api_key=zph_api_key)
           zph_response = zph_client.messages.create(
-              model="claude-opus-4-5",
+              model="claude-sonnet-4-6",
               max_tokens=2048,
               messages=[{"role": "user", "content": zph_prompt}],
           )
@@ -137,7 +137,7 @@ jobs:
 
           zph_comment_body = (
               "## [AI Review] Automated Code Review\n\n"
-              "> Powered by **Claude claude-opus-4-5** &nbsp;·&nbsp; _[AI Review]_\n\n"
+              "> Powered by **Claude claude-sonnet-4-6** &nbsp;·&nbsp; _[AI Review]_\n\n"
               f"{zph_review_text}\n\n"
               "---\n"
               "<sub>This review was generated automatically. "
