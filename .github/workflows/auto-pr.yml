@@ -1,0 +1,85 @@
+name: Auto Create PR
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - dev
+      - develop
+      - master
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  create-pr:
+    name: Create Pull Request
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create PR (skip if exists)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZPH_BRANCH: ${{ github.ref_name }}
+        run: |
+          zph_branch="$ZPH_BRANCH"
+          zph_base="dev"
+
+          if ! git ls-remote --exit-code --heads origin "$zph_base" > /dev/null 2>&1; then
+            echo "Base branch '$zph_base' does not exist on remote — skipping PR creation."
+            exit 0
+          fi
+
+          zph_existing=$(gh pr list \
+            --head "$zph_branch" \
+            --base "$zph_base" \
+            --state open \
+            --json number \
+            --jq 'length')
+
+          if [ "$zph_existing" -gt 0 ]; then
+            echo "PR already exists for '$zph_branch' → '$zph_base' — skipping."
+            exit 0
+          fi
+
+          # Commits on this branch not in base
+          zph_commits=$(git log origin/$zph_base..HEAD --oneline)
+          zph_commit_count=$(echo "$zph_commits" | grep -c .)
+
+          # Diff stat summary (files changed, insertions, deletions)
+          zph_stat_summary=$(git diff --shortstat origin/$zph_base...HEAD)
+
+          # Per-file breakdown
+          zph_file_stats=$(git diff --stat origin/$zph_base...HEAD | head -n -1 | awk '{
+            for (i=1; i<=NF; i++) if ($i == "|") { print "- `" $1 "` — " $(i+1) " changes"; break }
+          }')
+
+          # Build PR body
+          zph_body="## Changes
+
+$zph_stat_summary
+
+## Commits ($zph_commit_count)
+
+$(echo "$zph_commits" | sed 's/^/- /')
+
+## Files Changed
+
+$zph_file_stats
+
+---
+<sub>PR created automatically on push to \`$zph_branch\`.</sub>"
+
+          gh pr create \
+            --title "$zph_branch" \
+            --base "$zph_base" \
+            --head "$zph_branch" \
+            --body "$zph_body"
+
+          echo "PR created: '$zph_branch' → '$zph_base'"
